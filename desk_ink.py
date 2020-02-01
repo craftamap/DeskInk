@@ -9,6 +9,7 @@ from PIL import Image, ImageDraw, ImageFont
 from pyowm import OWM
 
 import crypto_config
+from mail_handler import MailHandler
 from airhorn import Airhorn
 from lib import epd4in2
 
@@ -22,10 +23,15 @@ class DeskInk:
 
     def __init__(self, config: configparser.ConfigParser):
         self.config = config
+        logging.info("Init EPD...")
         self.epd = epd4in2.EPD()
         self.epd.init()
+        logging.info("Init OWM...")
         self.owm = OWM(self.config["owm"]["key"])
+        logging.info("Init Airhorn...")
         self.airhorn = Airhorn(self.config["airhorn"]["pid"], self.config["airhorn"]["tempid"])
+        logging.info("Init MailHandler...")
+        self.mail = MailHandler(config)
 
     def getWeather(self):
         obs = self.owm.weather_at_place(self.config["owm"]["location"])
@@ -36,7 +42,8 @@ class DeskInk:
         while True:
             weather = self.getWeather()
             airhorn = self.airhorn.get_data()
-            image = self.draw(weather, airhorn, None)
+            mail = self.mail.count_mails()
+            image = self.draw(weather, airhorn, mail)
             self.epd.display(self.epd.getbuffer(image))
             time.sleep(600)
 
@@ -46,6 +53,10 @@ class DeskInk:
 
         tempminmax = weather[1]
 
+        if mail == 0:
+            mail_icon = Image.open("icons/mail-closed.jpg")
+        else:
+            mail_icon = Image.open("icons/mail-open.jpg")
 
         Himage = Image.new('1', (self.epd.width, self.epd.height), 255)
 
@@ -64,6 +75,10 @@ class DeskInk:
         p_text = "{} und {} µg/m³".format(airhorn["p2.5"], airhorn["p10"])
         p_size = draw.textsize(p_text, FONT18)
         draw.text((100 - p_size[0]/2, 185), p_text, font = FONT18, fill = 0)
+
+        Himage.paste(mail_icon, (275, 15))
+        if mail != 0:
+            draw.text((315, 7), str(mail), font = FONT18, fill = 0)
 
         return Himage
         
@@ -96,6 +111,7 @@ def main():
 
 if __name__ == "__main__":
     try:
+        logging.basicConfig(level=logging.INFO)
         main()
     except IOError as e:
         logging.info(e)
