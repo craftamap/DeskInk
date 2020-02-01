@@ -76,6 +76,7 @@ def _create_config(cipher, path):
     default_config = b"""
 [owm]
 key=
+location=
 
 [airhorn]
 tempid=
