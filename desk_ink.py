@@ -17,6 +17,7 @@ from lib import epd4in2
 
 FONT24 = ImageFont.truetype('Font.ttc', 24)
 FONT18 = ImageFont.truetype('Font.ttc', 18)
+MONO18 = ImageFont.truetype('Monospace.ttf', 18)
 FONT35 = ImageFont.truetype('Font.ttc', 35)
 
 class DeskInk:
@@ -93,11 +94,11 @@ class DeskInk:
             draw.text((315, 7), str(mail), font = FONT18, fill = 0)
         
         draw.rectangle((0,275, 400, 300), fill=0)
-        draw.text((10, 278), os.uname().nodename , font = FONT18, fill = 255)
+        draw.text((10, 276), os.uname().nodename , font = MONO18, fill = 255)
         
         time_text = dt.strftime("%Y-%m-%d %H:%M:%S")
-        time_size = draw.textsize(time_text, font= FONT18)
-        draw.text((390-time_size[0], 278), time_text, font = FONT18, fill = 255)
+        time_size = draw.textsize(time_text, font= MONO18)
+        draw.text((390-time_size[0], 276), time_text, font = MONO18, fill = 255)
 
         return Himage
         
