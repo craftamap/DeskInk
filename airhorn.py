@@ -30,5 +30,5 @@ class Airhorn(object):
         jr = r.json()
         return {
                 "p10": jr[0]["sensordatavalues"][0]["value"],
-                "p2.5": jr[0]["sensordatavalues"][0]["value"]
+                "p2.5": jr[0]["sensordatavalues"][1]["value"]
             }
