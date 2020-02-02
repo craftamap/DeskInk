@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
-
+import os
 import configparser
 import argparse
 import logging
 import time
+import datetime 
 
 from PIL import Image, ImageDraw, ImageFont
 from pyowm import OWM
@@ -57,6 +58,8 @@ class DeskInk:
             time.sleep(600)
 
     def draw(self, weather, airhorn, mail):
+
+        dt = datetime.datetime.now()
         icon_name = weather[0]
         icon = Image.open("icons/{}.jpg".format(icon_name))
 
@@ -88,6 +91,13 @@ class DeskInk:
         Himage.paste(mail_icon, (275, 15))
         if mail != 0:
             draw.text((315, 7), str(mail), font = FONT18, fill = 0)
+        
+        draw.rectangle((0,275, 400, 300), fill=0)
+        draw.text((10, 278), os.uname().nodename , font = FONT18, fill = 255)
+        
+        time_text = dt.strftime("%Y-%m-%d %H:%M:%S")
+        time_size = draw.textsize(time_text, font= FONT18)
+        draw.text((390-time_size[0], 278), time_text, font = FONT18, fill = 255)
 
         return Himage
         
