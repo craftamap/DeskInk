@@ -14,7 +14,7 @@ class Airhorn(object):
             retval.update( self._get_temperature() )
             retval.update( self._get_pvalues() )
             return retval
-        except (requests.ConnectionError, requests.HTTPError):
+        except (requests.ConnectionError, requests.HTTPError, IndexError):
             return dict()
 
     def _get_temperature(self):
