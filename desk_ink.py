@@ -22,16 +22,19 @@ class DeskInk:
     """Docstring for DeskInk. """
 
     def __init__(self, config: configparser.ConfigParser):
+        self.logger = logging.getLogger("DeskInk")
         self.config = config
-        logging.info("Init EPD...")
+        self.logger.info("Init EPD...")
         self.epd = epd4in2.EPD()
         self.epd.init()
-        logging.info("Init OWM...")
+        self.logger.info("Init OWM...")
         self.owm = OWM(self.config["owm"]["key"])
-        logging.info("Init Airhorn...")
+        self.logger.info("Init Airhorn...")
         self.airhorn = Airhorn(self.config["airhorn"]["pid"], self.config["airhorn"]["tempid"])
-        logging.info("Init MailHandler...")
+        self.logger.info("Init MailHandler...")
         self.mail = MailHandler(config)
+
+        self.logger.info("Init done!")
 
     def getWeather(self):
         obs = self.owm.weather_at_place(self.config["owm"]["location"])
@@ -40,11 +43,17 @@ class DeskInk:
 
     def run(self):
         while True:
+            self.logger.info("Starting to update...")
+            self.logger.info("  Getting Weather...")
             weather = self.getWeather()
+            self.logger.info("  Getting Airhorn...")
             airhorn = self.airhorn.get_data()
+            self.logger.info("  Getting Mails...")
             mail = self.mail.count_mails()
+            self.logger.info("  Draw and display...")
             image = self.draw(weather, airhorn, mail)
             self.epd.display(self.epd.getbuffer(image))
+            self.logger.info("  Now sleeping for 600 seconds")
             time.sleep(600)
 
     def draw(self, weather, airhorn, mail):
@@ -111,7 +120,7 @@ def main():
 
 if __name__ == "__main__":
     try:
-        logging.basicConfig(level=logging.INFO)
+        logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         main()
     except IOError as e:
         logging.info(e)
