@@ -1,12 +1,14 @@
 """ basic functions to implement an encrypted ini config file """
 import configparser
 import os
+from subprocess import call
+import tempfile
+import typing
 
 import blowfish
-import tempfile
-from subprocess import call
 
 EDITOR = os.environ.get('EDITOR', 'nano')
+
 
 def get_config(key: bytes, path: str) -> configparser.ConfigParser:
     """Gets ecb_cts-encrypted config from path as ConfigParser
@@ -29,7 +31,7 @@ def get_config(key: bytes, path: str) -> configparser.ConfigParser:
     return configp
 
 
-def edit_config(key: bytes, path: str):
+def edit_config(key: bytes, path: str, callback: typing.Callable):
     """Edits ecb_cts-encrypted config from path; creates file, if it doesn't
     exist and puts default config.
 
@@ -38,7 +40,7 @@ def edit_config(key: bytes, path: str):
         path  (str): path to config file
     """
     cipher = blowfish.Cipher(key)
- 
+
     if not os.path.exists(path):
         _create_config(cipher, path)
 
@@ -46,30 +48,33 @@ def edit_config(key: bytes, path: str):
         i_data_decrypted = b''.join(cipher.decrypt_ecb_cts(configfile.read()))
         try:
             configparser.ConfigParser().read_string(i_data_decrypted.decode())
-            """ Throws an exception if config is invalid"""
         except configparser.Error:
             raise Exception("Invalid Config file: Is your Key correct")
-    
+
+    newconfig = callback(i_data_decrypted)
+
+    try:
+        configparser.ConfigParser().read_string(newconfig.decode())
+        """ Throws an exception if config is invalid"""
+    except configparser.Error:
+        print("Cannot read new config... Restoring old config")
+        newconfig = i_data_decrypted
+
+    with open(path, "wb") as configfile:
+        o_encrypt_data = b"".join(cipher.encrypt_ecb_cts(newconfig))
+        configfile.write(o_encrypt_data)
+
+
+def interactive_edit_config(decrypted_data: bytes):
     with tempfile.NamedTemporaryFile(suffix="tmp") as tf:
-        tf.write(i_data_decrypted)
+        tf.write(decrypted_data)
         tf.flush()
 
         call([EDITOR, tf.name])
 
         tf.seek(0)
-        newconfig = tf.read()
-    
-    try:
-        configparser.ConfigParser().read_string(newconfig.decode())
-        """ Throws an exception if config is invalid"""
-    except configparser.Error:
-        print("Cannot read new config... Restoring old config") 
-        newconfig =  i_data_decrypted
+        return tf.read()
 
-
-    with open(path, "wb") as configfile:
-        o_encrypt_data = b"".join(cipher.encrypt_ecb_cts(newconfig))
-        configfile.write(o_encrypt_data)
 
 
 def _create_config(cipher, path):
@@ -89,9 +94,7 @@ username=
 password=
 """
 
-    if not os.access(
-            os.path.dirname(os.path.abspath(path)), os.W_OK
-        ):
+    if not os.access(os.path.dirname(os.path.abspath(path)), os.W_OK):
         raise ValueError("Can't create file here")
 
     with open(path, "wb+") as configfile:
