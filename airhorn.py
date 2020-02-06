@@ -7,15 +7,22 @@ class Airhorn(object):
         self.pid = pid
         self.tid = tid
         self.url = url
+        self.before = {
+            "temperature": 0,
+            "humidity": 0,
+            "p10": 0,
+            "p2.5": 0
+                }
 
-    def get_data(self): 
+    def get_data(self):
         try:
             retval = dict()
             retval.update( self._get_temperature() )
             retval.update( self._get_pvalues() )
+            self.before = retval
             return retval
         except (requests.ConnectionError, requests.HTTPError, IndexError):
-            return dict()
+            return self.before
 
     def _get_temperature(self):
         r = requests.get(self.url.format(id = self.tid))
