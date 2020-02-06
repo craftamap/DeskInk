@@ -13,12 +13,16 @@ class MailHandler(object):
 
     def count_mails(self):
         counter = 0
+        account: imaplib.IMAP4_SSL
         for _, account in self.connections.items():
-            account.select("INBOX")
-            result_raw = account.search(None, "UNSEEN")
-            results = [int(x) for x in result_raw[1][0].decode().split() if x.isnumeric()]
-            counter += len(results)
-        return counter            
+            try:
+                account.select("INBOX")
+                result_raw = account.search(None, "UNSEEN")
+                results = [int(x) for x in result_raw[1][0].decode().split() if x.isnumeric()]
+                counter += len(results)
+            except(Exception):
+                print("Error grapping mails!")
+            return counter
 
     def _register_mail(self, host, port, username, password):
         try:
