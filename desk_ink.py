@@ -4,7 +4,7 @@ import configparser
 import argparse
 import logging
 import time
-import datetime 
+import datetime
 
 from PIL import Image, ImageDraw, ImageFont
 from pyowm import OWM
@@ -14,15 +14,14 @@ from mail_handler import MailHandler
 from airhorn import Airhorn
 from lib import epd4in2
 
-
-FONT24 = ImageFont.truetype('Font.ttc', 24)
-FONT18 = ImageFont.truetype('Font.ttc', 18)
+FONT24 = ImageFont.truetype('FiraSans-Regular.ttf', 24)
+FONT18 = ImageFont.truetype('FiraSans-Regular.ttf', 18)
 MONO18 = ImageFont.truetype('Monospace.ttf', 18)
-FONT35 = ImageFont.truetype('Font.ttc', 35)
+FONT35 = ImageFont.truetype('FiraSans-Regular.ttf', 35)
+
 
 class DeskInk:
     """Docstring for DeskInk. """
-
     def __init__(self, config: configparser.ConfigParser):
         self.logger = logging.getLogger("DeskInk")
         self.config = config
@@ -32,9 +31,11 @@ class DeskInk:
         self.logger.info("Init OWM...")
         self.owm = OWM(self.config["owm"]["key"])
         self.logger.info("Init Airhorn...")
-        self.airhorn = Airhorn(self.config["airhorn"]["pid"], self.config["airhorn"]["tempid"])
+        self.airhorn = Airhorn(self.config["airhorn"]["pid"],
+                               self.config["airhorn"]["tempid"])
         self.logger.info("Init MailHandler...")
         self.mail = MailHandler(config)
+
 
         self.logger.info("Init done!")
 
@@ -124,19 +125,22 @@ def main():
     arguments = parser.parse_args()
 
     if arguments.subcommand == "edit":
-        crypto_config.edit_config(arguments.key.encode(), arguments.config)
+        crypto_config.edit_config(arguments.key.encode(), arguments.config,
+                                  crypto_config.interactive_edit_config)
     elif arguments.subcommand == "start":
-        start(arguments) 
+        start(arguments)
 
 
 if __name__ == "__main__":
     try:
-        logging.basicConfig(level=logging.INFO, format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
+        logging.basicConfig(
+            level=logging.INFO,
+            format="%(asctime)s - %(name)s - %(levelname)s - %(message)s")
         main()
     except IOError as e:
         logging.info(e)
-        
-    except KeyboardInterrupt:    
+
+    except KeyboardInterrupt:
         logging.info("ctrl + c:")
         epd4in2.epdconfig.module_exit()
         exit()
