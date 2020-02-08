@@ -5,6 +5,7 @@ import argparse
 import logging
 import time
 import datetime
+import importlib
 
 from PIL import Image, ImageDraw, ImageFont
 from pyowm import OWM
@@ -14,7 +15,6 @@ import gcal_handler
 from gcal_handler import GcalHandler
 from mail_handler import MailHandler
 from airhorn import Airhorn
-from lib import epd4in2
 from dateutil import parser
 
 FONT24 = ImageFont.truetype('FiraSans-Regular.ttf', 24)
@@ -133,6 +133,7 @@ def start(args):
 
 def main():
     parser = argparse.ArgumentParser("DeskInk")
+    parser.add_argument("--preview", type=bool, default=False)
     subparsers = parser.add_subparsers(title="commands", dest="subcommand")
 
     edit_parser = subparsers.add_parser("edit")
@@ -147,8 +148,13 @@ def main():
     gcal_parser.add_argument("-c", "--config", default="config")
     gcal_parser.add_argument("-k", "--key", required=True)
 
-
     arguments = parser.parse_args()
+
+    global epd4in2
+    if not arguments.preview:
+        epd4in2 = importlib.import_module("lib.epd4in2")
+    else:
+        epd4in2 = importlib.import_module("lib.epd4in2mock")
 
     if arguments.subcommand == "edit":
         crypto_config.edit_config(arguments.key.encode(), arguments.config,
