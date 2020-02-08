@@ -101,15 +101,7 @@ class DeskInk:
         if mail != 0:
             draw.text((315, 22), str(mail), font=FONT18, fill=0)
 
-        draw.text((200, 120), "Termine:", font=FONT24, fill=0)
-
-        for i, v in enumerate(calendar):
-            datet = v['start'].get('dateTime', v['start'].get('date'))
-            datep = parser.parse(datet)
-
-            draw.text((200, 150+i*20), datep.strftime("%d.%m"), font=FONT18, fill=0)
-            draw.text((250, 150+i*20), v["summary"][:12]+"..." if len(v["summary"]) > 12 else v["summary"], font=FONT18, fill=0)
-
+        Himage.paste(self.gcal.render(), (200, 120))
 
         draw.rectangle((0, 275, 400, 300), fill=0)
         draw.text((10, 276), os.uname().nodename, font=MONO18, fill=255)

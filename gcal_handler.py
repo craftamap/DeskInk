@@ -1,16 +1,21 @@
+from abstract_handler import AbstractHandler
 import datetime
 import pickle
 import configparser
 import json
 import io
+from dateutil import parser
+from PIL import Image, ImageDraw, ImageFont
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
-from google.auth.transport.requests import Request
-from google.oauth2.credentials import Credentials
 
 SCOPES = ['https://www.googleapis.com/auth/calendar.readonly']
+FONT18 = ImageFont.truetype('FiraSans-Regular.ttf', 18)
+FONT24 = ImageFont.truetype('FiraSans-Regular.ttf', 24)
+FONT35 = ImageFont.truetype('FiraSans-Regular.ttf', 35)
 
-class GcalHandler(object):
+
+class GcalHandler(AbstractHandler):
     """Docstring for Gcal_Handler. """
 
     def __init__(self, config):
@@ -21,6 +26,23 @@ class GcalHandler(object):
         print(creds)
         self.service = build('calendar', 'v3', credentials=creds,
                              cache_discovery=False)
+
+    def render(self):
+        calendar = self.get_next_appointments()
+
+        image = Image.new('1', (200, 400), 255)
+        draw = ImageDraw.Draw(image)
+        draw.text((0, 0), "Termine:", font=FONT24, fill=0)
+
+        for i, v in enumerate(calendar):
+            datet = v['start'].get('dateTime', v['start'].get('date'))
+            datep = parser.parse(datet)
+
+            draw.text((0, 30+i*20), datep.strftime("%d.%m"), font=FONT18, fill=0)
+            draw.text((50, 30+i*20),
+                      v["summary"][:12]+"..." if len(v["summary"]) > 12 else v["summary"],
+                      font=FONT18, fill=0)
+        return image
 
     def _register_multiple_calendar_ids(self, calendar_ids: str):
         cids = calendar_ids.split(",")
